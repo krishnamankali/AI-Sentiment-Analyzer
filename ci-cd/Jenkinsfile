@@ -1,0 +1,28 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    sonarQubeScanner('SonarQubeServer')
+                }
+            }
+        }
+        stage('Build & Push Docker') {
+            steps {
+                sh 'docker build -t your-dockerhub-id/ai-backend:latest .'
+                sh 'docker push your-dockerhub-id/ai-backend:latest'
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f k8s-deployment.yaml'
+            }
+        }
+    }
+}
