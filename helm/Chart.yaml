@@ -1,0 +1,13 @@
+apiVersion: v2
+name: ai-sentiment-analyzer
+description: A Helm chart for deploying the AI Sentiment Analyzer application
+type: application
+version: 0.1.0
+appVersion: "1.0"
+maintainers:
+  - name: krishnamankali
+    email: krishnamankali60@gmail.com
+dependencies:
+  - name: postgresql
+    version: "12.1.1"
+    repository: "https://charts.bitnami.com/bitnami"
