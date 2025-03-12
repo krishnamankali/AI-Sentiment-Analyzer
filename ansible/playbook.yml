@@ -1,0 +1,58 @@
+- name: Configure AI Sentiment Analyzer Server
+  hosts: all
+  become: yes
+  tasks:
+
+    - name: Update package cache
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install required packages
+      package:
+        name:
+          - python3
+          - python3-pip
+          - docker.io
+          - git
+          - unzip
+        state: present
+
+    - name: Install AWS CLI
+      shell: |
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install
+        rm -rf awscliv2.zip aws/
+      args:
+        creates: /usr/local/bin/aws
+
+    - name: Install Kubernetes CLI (kubectl)
+      shell: |
+        curl -LO "https://dl.k8s.io/release/v1.26.0/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        mv kubectl /usr/local/bin/
+      args:
+        creates: /usr/local/bin/kubectl
+
+    - name: Clone AI-Sentiment-Analyzer repo
+      git:
+        repo: "https://github.com/your-username/AI-Sentiment-Analyzer.git"
+        dest: "/opt/ai-sentiment-analyzer"
+        version: main
+
+    - name: Build Docker image
+      command: docker build -t ai-sentiment-analyzer /opt/ai-sentiment-analyzer/backend/
+
+    - name: Run AI application container
+      docker_container:
+        name: ai-sentiment-analyzer
+        image: ai-sentiment-analyzer
+        state: started
+        ports:
+          - "5000:5000"
+
+    - name: Deploy to Kubernetes
+      shell: |
+        kubectl apply -f /opt/ai-sentiment-analyzer/k8s/
+      when: "'eks' in group_names"
